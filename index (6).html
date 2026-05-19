@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UCSF Health — Ambulatory Physician Leadership Tool</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#052049;
+  --navy-2:#0a3370;
+  --teal:#18a3ac;
+  --teal-2:#1bb8c2;
+  --green:#90bd31;
+  --blue:#178ccb;
+  --orange:#f48024;
+  --red:#c8102e;
+  --bg:#f5f7fa;
+  --white:#fff;
+  --border:#dce1e8;
+  --text:#1e2840;
+  --mid:#5a6a80;
+  --light:#8694a8;
+  --shadow:0 2px 8px rgba(5,32,73,0.08);
+  --shadow-lg:0 8px 32px rgba(5,32,73,0.12);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.4}
+
+/* ============= HEADER ============= */
+.hero{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-2) 100%);color:#fff;padding:28px 24px;text-align:center;border-bottom:3px solid var(--teal)}
+.hero .ey{font-size:11px;letter-spacing:3px;color:var(--teal);text-transform:uppercase;margin-bottom:6px;font-weight:600}
+.hero h1{font-size:24px;font-weight:700;letter-spacing:-0.3px}
+.hero p{font-size:12px;color:#8ca0bc;margin-top:8px;max-width:720px;margin-left:auto;margin-right:auto}
+
+/* ============= TABS ============= */
+.tabs{display:flex;justify-content:center;background:#fff;border-bottom:1px solid var(--border);box-shadow:var(--shadow);position:sticky;top:0;z-index:20}
+.tab{padding:14px 28px;font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;letter-spacing:.3px}
+.tab:hover{color:var(--navy);background:#f9fafb}
+.tab.active{color:var(--navy);border-bottom-color:var(--teal);background:#f9fafb}
+
+/* ============= CONTAINER ============= */
+.container{max-width:1280px;margin:0 auto;padding:24px 20px 60px}
+.view{display:none}
+.view.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ============= CASCADE ============= */
+.cascade-wrap{display:flex;flex-direction:column;align-items:center;gap:0;margin-bottom:24px}
+.tier-label{font-size:9px;letter-spacing:2px;color:var(--light);text-transform:uppercase;margin-bottom:6px;font-weight:600}
+.node{text-align:center;border-radius:12px;padding:12px 28px;position:relative}
+.node-evp{background:var(--navy);border:2px solid var(--teal);box-shadow:var(--shadow-lg)}
+.node-evp .lb{font-size:9px;color:var(--teal);text-transform:uppercase;letter-spacing:2px;font-weight:700}
+.node-evp .nm{font-size:18px;font-weight:700;color:#fff;margin-top:2px}
+.node-evp .sb{font-size:10px;color:#8ca0bc;margin-top:3px}
+.node-cmo{background:#fff;border:2px solid var(--navy);box-shadow:var(--shadow)}
+.node-cmo .lb{font-size:8px;color:var(--teal);text-transform:uppercase;letter-spacing:1.5px;font-weight:700}
+.node-cmo .nm{font-size:16px;font-weight:700;color:var(--navy);margin-top:2px}
+.node-cmo .sb{font-size:9px;color:var(--light);margin-top:2px}
+.vl{width:2px;height:18px;background:var(--border);margin:0 auto}
+
+.tier-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:6px 0 12px}
+
+.emd-chip{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:10px 16px;text-align:center;cursor:pointer;transition:all .2s;min-width:150px;flex:0 1 170px;position:relative;box-shadow:var(--shadow)}
+.emd-chip:hover{border-color:var(--teal);box-shadow:0 4px 12px rgba(24,163,172,.18);transform:translateY(-1px)}
+.emd-chip.active{background:var(--navy);border-color:var(--teal)}
+.emd-chip.active .nm{color:#fff}
+.emd-chip.active .lb{color:var(--teal)}
+.emd-chip.active .sb{color:#8ca0bc}
+.emd-chip.active .tg{color:var(--teal)}
+.emd-chip.vacant{border-style:dashed;border-color:var(--orange);background:#fff8f0}
+.emd-chip.vacant .lb{color:var(--orange)}
+.emd-chip .badge{position:absolute;top:-7px;right:-7px;background:var(--teal);color:#fff;font-size:9px;font-weight:800;border-radius:10px;padding:2px 7px;letter-spacing:.3px}
+.emd-chip .lb{font-size:7.5px;color:var(--teal);text-transform:uppercase;letter-spacing:1px;font-weight:700}
+.emd-chip .nm{font-size:12px;font-weight:600;color:var(--navy);margin-top:2px;line-height:1.25}
+.emd-chip .sb{font-size:9px;color:var(--light);margin-top:2px}
+.emd-chip .tg{font-size:8.5px;color:var(--blue);margin-top:3px;font-weight:600}
+
+/* MD detail panel */
+.md-panel{display:none;background:#fff;border:2px solid var(--teal);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-lg);margin-top:8px}
+.md-panel.open{display:block;animation:fadeIn .3s ease}
+.md-hdr{background:var(--navy);padding:16px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.md-hdr .lb{font-size:9px;color:var(--teal);text-transform:uppercase;letter-spacing:2px;font-weight:700}
+.md-hdr .nm{font-size:18px;font-weight:700;color:#fff;margin-top:2px}
+.md-hdr .sb{font-size:11px;color:#8ca0bc;margin-top:2px}
+.close-btn{background:transparent;border:1px solid rgba(24,163,172,.5);border-radius:8px;padding:6px 14px;color:var(--teal);font-size:11px;cursor:pointer;font-weight:600}
+.close-btn:hover{background:rgba(24,163,172,.1)}
+.score-from-rubric-btn{background:var(--teal);border:none;border-radius:8px;padding:7px 14px;color:#fff;font-size:11px;cursor:pointer;font-weight:600;margin-left:8px}
+.score-from-rubric-btn:hover{background:var(--teal-2)}
+
+.md-list{padding:16px}
+.md-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.md-card:hover{border-color:var(--blue)}
+.md-row{padding:12px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.md-row:hover{background:#eef3f8}
+.md-name{font-size:14px;font-weight:600;color:var(--navy)}
+.md-role{font-size:9px;color:var(--light);margin-top:2px;text-transform:uppercase;letter-spacing:1px}
+.md-meta{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.pill{font-size:9px;font-weight:600;color:var(--navy);background:#e0ecf5;padding:3px 9px;border-radius:6px;white-space:nowrap}
+.pill-c{color:var(--mid);background:#edf0f4}
+.pill-score{background:var(--teal);color:#fff}
+.pill-vacant{background:var(--orange);color:#fff}
+.arrow{color:var(--blue);font-size:11px}
+.dyad-line{display:flex;align-items:center;gap:5px;margin-top:5px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+.dyad-name{font-size:10px;color:#3a7a3a}
+
+.cc-wrap{display:none;border-top:1px solid var(--border);background:#fff}
+.cc-wrap.open{display:block}
+.cc-table{width:100%;border-collapse:collapse;font-size:10.5px}
+.cc-table th{background:var(--navy);color:#fff;padding:8px 12px;text-align:left;font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.cc-table td{padding:6px 12px;border-bottom:1px solid #edf0f4;color:var(--text)}
+.cc-table tr:nth-child(even) td{background:#f9fafb}
+.cc-table tr:hover td{background:#e8f4fb}
+.cc-table .dy-col{color:#3a7a3a}
+
+/* Legend */
+.legend{margin-top:24px;display:flex;gap:20px;justify-content:center;flex-wrap:wrap;padding:14px 0;border-top:1px solid var(--border)}
+.legend-item{display:flex;align-items:center;gap:6px}
+.legend-dot{width:9px;height:9px;border-radius:50%}
+.legend-label{font-size:10px;color:var(--light)}
+
+/* ============= RUBRIC ============= */
+.rubric-intro{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:20px;box-shadow:var(--shadow)}
+.rubric-intro h2{font-size:18px;color:var(--navy);font-weight:700;margin-bottom:6px}
+.rubric-intro p{font-size:13px;color:var(--mid);line-height:1.55}
+
+.role-name-input{width:100%;background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 18px;font-size:14px;color:var(--text);outline:none;margin-bottom:20px;font-family:inherit;box-shadow:var(--shadow)}
+.role-name-input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(24,163,172,.12)}
+
+.rubric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px;margin-bottom:20px}
+.rubric-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+.rubric-card h3{font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+
+.metric-row{display:grid;grid-template-columns:1fr 1fr 30px;gap:10px;align-items:center;padding:8px 0}
+.metric-label{font-size:12px;color:var(--navy);font-weight:600;line-height:1.3}
+.metric-sub{font-size:10px;color:var(--light);font-weight:400;margin-top:2px}
+.metric-select{background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text);outline:none;cursor:pointer;font-family:inherit;width:100%}
+.metric-select:focus{border-color:var(--teal)}
+.metric-select:hover{border-color:var(--blue)}
+.metric-score{font-size:15px;font-weight:700;color:var(--navy);text-align:center}
+.metric-score.empty{color:var(--light)}
+
+/* Score breakdown */
+.breakdown{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px 24px;box-shadow:var(--shadow);margin-bottom:20px}
+.breakdown h3{font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:14px}
+.bar-row{display:grid;grid-template-columns:160px 1fr 30px;gap:14px;align-items:center;padding:7px 0}
+.bar-label{font-size:12px;color:var(--text)}
+.bar-track{height:10px;background:#eef2f6;border-radius:5px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--teal));border-radius:5px;transition:width .35s ease}
+.bar-fill.empty{background:#dde3ea}
+.bar-val{font-size:13px;font-weight:700;color:var(--navy);text-align:right}
+
+/* Total + tier */
+.total-block{background:linear-gradient(135deg,var(--navy),var(--navy-2));border-radius:14px;padding:24px;color:#fff;display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;text-align:center;box-shadow:var(--shadow-lg)}
+.total-cell{border-right:1px solid rgba(255,255,255,.12);padding:0 12px}
+.total-cell:last-child{border-right:none}
+.total-cell .label{font-size:10px;color:var(--teal);text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:6px}
+.total-cell .val{font-size:32px;font-weight:800;letter-spacing:-1px}
+.total-cell .sub{font-size:11px;color:#8ca0bc;margin-top:4px}
+.tier-badge{display:inline-block;padding:6px 14px;background:var(--teal);color:#fff;border-radius:20px;font-size:13px;font-weight:700;margin-top:4px;letter-spacing:.3px}
+.tier-badge.tier-low{background:var(--orange)}
+.tier-badge.tier-mid{background:var(--blue)}
+.tier-badge.tier-high{background:var(--green);color:var(--navy)}
+
+/* Action bar */
+.actions{margin-top:20px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.btn{padding:10px 18px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;letter-spacing:.3px;transition:all .15s}
+.btn-primary{background:var(--teal);color:#fff}
+.btn-primary:hover{background:var(--teal-2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(24,163,172,.3)}
+.btn-secondary{background:#fff;color:var(--navy);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--navy);background:#f9fafb}
+.btn-danger{background:#fff;color:var(--red);border:1px solid #f0c8ce}
+.btn-danger:hover{background:#fef2f4}
+
+/* Saved scores table */
+.saved-section{margin-top:32px;background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px 24px;box-shadow:var(--shadow)}
+.saved-section h3{font-size:14px;color:var(--navy);font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.saved-table{width:100%;border-collapse:collapse;font-size:12px}
+.saved-table th{background:#f5f7fa;color:var(--mid);padding:10px 12px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-bottom:2px solid var(--border)}
+.saved-table td{padding:10px 12px;border-bottom:1px solid #edf0f4}
+.saved-table tr:hover td{background:#f9fafb}
+.saved-table .actions-cell{text-align:right}
+.saved-table .icon-btn{background:none;border:none;color:var(--light);cursor:pointer;font-size:14px;padding:4px 8px;border-radius:4px}
+.saved-table .icon-btn:hover{background:#eef3f8;color:var(--navy)}
+.saved-table .icon-btn.del:hover{color:var(--red);background:#fef2f4}
+.empty-state{text-align:center;padding:30px 20px;color:var(--light);font-size:12px;font-style:italic}
+
+/* ============= DATA TAB ============= */
+.data-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:24px;box-shadow:var(--shadow);margin-bottom:20px}
+.data-card h2{font-size:16px;color:var(--navy);margin-bottom:14px;font-weight:700}
+.data-card h3{font-size:13px;color:var(--navy);margin:18px 0 8px;font-weight:600}
+.data-card p{font-size:13px;color:var(--mid);line-height:1.6;margin-bottom:10px}
+.data-card code{background:#f5f7fa;padding:2px 6px;border-radius:4px;font-family:"SF Mono","Monaco","Consolas",monospace;font-size:11.5px;color:var(--navy);border:1px solid #e5e9ef}
+.data-card pre{background:#0f1729;color:#e6edf7;padding:16px 18px;border-radius:8px;font-family:"SF Mono","Monaco","Consolas",monospace;font-size:11px;overflow-x:auto;line-height:1.5;margin:10px 0}
+.data-card pre .comment{color:#7a8a9e}
+.data-card pre .key{color:#7dd3c0}
+.data-card pre .str{color:#f4c08a}
+.data-card pre .num{color:#a9d99a}
+.data-card ul{margin:8px 0 14px 20px;font-size:13px;color:var(--mid);line-height:1.7}
+.data-card ul li{margin-bottom:4px}
+.data-card strong{color:var(--navy);font-weight:600}
+
+.schema-box{border-left:3px solid var(--teal);padding-left:16px;margin:14px 0}
+
+@media print{
+  .tabs,.hero,.actions,.close-btn,.score-from-rubric-btn{display:none}
+  .view{display:block!important;page-break-after:always}
+}
+
+@media(max-width:720px){
+  .total-block{grid-template-columns:1fr;gap:16px}
+  .total-cell{border-right:none;border-bottom:1px solid rgba(255,255,255,.12);padding-bottom:16px}
+  .total-cell:last-child{border-bottom:none}
+  .bar-row{grid-template-columns:120px 1fr 28px;gap:8px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============= HEADER ============= -->
+<header class="hero">
+  <div class="ey">UCSF Health · Ambulatory Physician Leadership</div>
+  <h1>Leadership Harmonization Tool</h1>
+  <p>Visualize the leadership cascade and score roles using the standardized rubric. Built for the workgroup chartered by the Ambulatory Business Unit CMO.</p>
+</header>
+
+<!-- ============= TABS ============= -->
+<nav class="tabs" id="tabs">
+  <div class="tab active" data-view="cascade">Leadership Cascade</div>
+  <div class="tab" data-view="rubric">Role Sizing Rubric</div>
+  <div class="tab" data-view="data">Data Schema</div>
+</nav>
+
+<div class="container">
+
+  <!-- ============= CASCADE VIEW ============= -->
+  <section id="view-cascade" class="view active">
+
+    <div class="cascade-wrap">
+      <div class="tier-label">Tier 1 · SVP</div>
+      <div class="node node-evp">
+        <div class="lb">EVP / SVP</div>
+        <div class="nm" id="evpName">— Load data —</div>
+        <div class="sb" id="evpSub">Roster awaiting data load</div>
+      </div>
+      <div class="vl"></div>
+      <div class="tier-label">Tier 2 · CMO</div>
+      <div class="node node-cmo">
+        <div class="lb">Chief Medical Officer</div>
+        <div class="nm" id="cmoName">— Load data —</div>
+        <div class="sb" id="cmoSub">Roster awaiting data load</div>
+      </div>
+      <div class="vl"></div>
+      <div class="tier-label">Tier 3 · AEMD</div>
+      <div id="emdGrid" class="tier-row"></div>
+    </div>
+
+    <div id="mdPanel" class="md-panel"></div>
+
+    <div class="legend">
+      <div class="legend-item"><span class="legend-dot" style="background:var(--navy)"></span><span class="legend-label">EVP / CMO (Tier 1–2)</span></div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--teal)"></span><span class="legend-label">AEMD filled (click to expand)</span></div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--orange);border:1px dashed var(--orange)"></span><span class="legend-label">AEMD vacant</span></div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span><span class="legend-label">Admin Director (dyad)</span></div>
+    </div>
+  </section>
+
+  <!-- ============= RUBRIC VIEW ============= -->
+  <section id="view-rubric" class="view">
+
+    <div class="rubric-intro">
+      <h2>Role Sizing Rubric</h2>
+      <p>Score any medical leadership role in real time during the workgroup meeting. Each metric maps to a 1–4 tier. The composite score recommends a cFTE range. <strong>Visit volume</strong> and <strong>clinicians supervised</strong> are the primary drivers — adjust weighting in the configuration if needed.</p>
+    </div>
+
+    <input type="text" class="role-name-input" id="roleName" placeholder="Role name (e.g. Medical Director — HemOnc GU)">
+
+    <div class="rubric-grid">
+
+      <div class="rubric-card">
+        <h3>Clinical Scope</h3>
+
+        <div class="metric-row">
+          <div>
+            <div class="metric-label">Visit volume / yr</div>
+            <div class="metric-sub">Clinic encounters · PRIMARY</div>
+          </div>
+          <select class="metric-select" data-metric="visits" data-weight="1.5">
+            <option value="">— Select —</option>
+            <option value="1">&lt; 5k visits</option>
+            <option value="2">5k – 15k</option>
+            <option value="3">15k – 40k</option>
+            <option value="4">&gt; 40k</option>
+          </select>
+          <div class="metric-score empty" data-score="visits">—</div>
+        </div>
+
+        <div class="metric-row">
+          <div>
+            <div class="metric-label">Clinicians supervised</div>
+            <div class="metric-sub">Physicians + APPs · PRIMARY</div>
+          </div>
+          <select class="metric-select" data-metric="clinicians" data-weight="1.5">
+            <option value="">— Select —</option>
+            <option value="1">&lt; 5</option>
+            <option value="2">5 – 15</option>
+            <option value="3">16 – 30</option>
+            <option value="4">&gt; 30</option>
+          </select>
+          <div class="metric-score empty" data-score="clinicians">—</div>
+        </div>
+
+        <div class="metric-row">
+          <div>
+            <div class="metric-label">Subspecialty complexity</div>
+            <div class="metric-sub">Distinct clinical programs</div>
+          </div>
+          <select class="metric-select" data-metric="subspecialty" data-weight="1">
+            <option value="">— Select —</option>
+            <option value="1">Single program</option>
+            <option value="2">2 – 3 programs</option>
+            <option value="3">4 – 6 programs</option>
+            <option value="4">&gt; 6 programs</option>
+          </select>
+          <div class="metric-score empty" data-score="subspecialty">—</div>
+        </div>
+
+        <div class="metric-row">
+          <div>
+            <div class="metric-label">Patient complexity</div>
+            <div class="metric-sub">Acuity level</div>
+          </div>
+          <select class="metric-select" data-metric="acuity" data-weight="1">
+            <option value="">— Select —</option>
+            <option value="1">Low (routine)</option>
+            <option value="2">Moderate (general specialty)</option>
+            <option value="3">High (tertiary)</option>
+            <option value="4">Very high (quaternary)</option>
+          </select>
+          <div class="metric-score empty" data-score="acuity">—</div>
+        </div>
+      </div>
+
+      <div class="rubric-card">
+        <h3>Structural Complexity</h3>
+
+        <div class="metric-row">
+          <div>
+            <div class="metric-label">Number of sites</div>
+            <div class="metric-sub">Physical clinic locations</div>
+          </div>
+          <select class="metric-select" data-metric="sites" data-weight="1">
+            <option value="">— Select —</option>
+            <option value="1">1 site</option>
+            <option value="2">2 – 3 sites</option>
+            <option value="3">4 – 6 sites</option>
+            <option value="4">&gt; 6 sites</option>
+          </select>
+          <div class="metric-score empty" data-score="sites">—</div>
+        </div>
+
+        <div class="metric-row">
+          <div>
+            <div class="metric-label">Practice setting</div>
+            <div class="metric-sub">AMC vs community</div>
+          </div>
+          <select class="metric-select" data-metric="setting" data-weight="1">
+            <option value="">— Select —</option>
+            <option value="1">AMC only</option>
+            <option value="2">AMC + 1 community</option>
+            <option value="3">AMC + multi-community</option>
+            <option value="4">Network-spanning</option>
+          </select>
+          <div class="metric-score empty" data-score="setting">—</div>
+        </div>
+
+        <div class="metric-row">
+          <div>
+            <div class="metric-label">Adult / Peds mix</div>
+            <div class="metric-sub">Requires dual expertise</div>
+          </div>
+          <select class="metric-select" data-metric="mix" data-weight="1">
+            <option value="">— Select —</option>
+            <option value="1">Adult only</option>
+            <option value="2">Peds only</option>
+            <option value="3">Balanced adult + peds</option>
+            <option value="4">Lifespan / transition focus</option>
+          </select>
+          <div class="metric-score empty" data-score="mix">—</div>
+        </div>
+
+        <div class="metric-row">
+          <div>
+            <div class="metric-label">Strategic growth priority</div>
+            <div class="metric-sub">Market / system priority</div>
+          </div>
+          <select class="metric-select" data-metric="strategy" data-weight="1">
+            <option value="">— Select —</option>
+            <option value="1">Maintain</option>
+            <option value="2">Moderate priority</option>
+            <option value="3">High priority</option>
+            <option value="4">Top True North driver</option>
+          </select>
+          <div class="metric-score empty" data-score="strategy">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Score breakdown -->
+    <div class="breakdown">
+      <h3>Score Breakdown</h3>
+      <div id="barList"></div>
+    </div>
+
+    <!-- Total -->
+    <div class="total-block">
+      <div class="total-cell">
+        <div class="label">Weighted Score</div>
+        <div class="val" id="totalScore">—</div>
+        <div class="sub">out of 32 max</div>
+      </div>
+      <div class="total-cell">
+        <div class="label">Recommended Tier</div>
+        <div class="val" style="font-size:24px" id="tierLabel">—</div>
+        <div><span class="tier-badge" id="tierBadge" style="display:none">—</span></div>
+      </div>
+      <div class="total-cell">
+        <div class="label">Suggested cFTE</div>
+        <div class="val" id="cfteValue">—</div>
+        <div class="sub" id="cfteRange">range guidance</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-secondary" id="resetBtn">Reset</button>
+      <button class="btn btn-primary" id="saveBtn">Save Score</button>
+      <button class="btn btn-secondary" id="exportBtn">Export CSV</button>
+    </div>
+
+    <!-- Saved scores -->
+    <div class="saved-section">
+      <h3>
+        <span>Saved Role Scores</span>
+        <span style="font-size:10px;color:var(--light);font-weight:400">Stored locally · not synced</span>
+      </h3>
+      <div id="savedList"></div>
+    </div>
+
+  </section>
+
+  <!-- ============= DATA SCHEMA VIEW ============= -->
+  <section id="view-data" class="view">
+    <div class="data-card">
+      <h2>Loading Your Data</h2>
+      <p>This tool is built to run on a <strong>single static HTML file</strong> with no backend. To plug in real UCSF Health data, populate the <code>LEADERSHIP_DATA</code> JavaScript object at the bottom of <code>index.html</code>. The shape below matches the existing <code>Physician_Leader_Cost_Center_Map_Master_16.xlsx</code> structure.</p>
+
+      <h3>1 · Top-level structure</h3>
+      <pre><span class="comment">// Sits inline in index.html — replace the empty arrays</span>
+<span class="key">const</span> LEADERSHIP_DATA = {
+  <span class="key">svp</span>:  { <span class="key">name</span>: <span class="str">"Inga Lennes"</span>, <span class="key">ccCount</span>: <span class="num">655</span> },
+  <span class="key">cmo</span>:  { <span class="key">name</span>: <span class="str">"John Fangman"</span>, <span class="key">ccCount</span>: <span class="num">343</span>, <span class="key">aemdCount</span>: <span class="num">8</span> },
+  <span class="key">aemds</span>: [ <span class="comment">/* see schema below */</span> ]
+};</pre>
+
+      <div class="schema-box">
+        <h3>2 · AEMD record</h3>
+        <pre>{
+  <span class="key">name</span>:           <span class="str">"Jen Perkins"</span>,
+  <span class="key">vacant</span>:         <span class="num">false</span>,                <span class="comment">// true → orange dashed chip</span>
+  <span class="key">totalCCs</span>:       <span class="num">48</span>,                   <span class="comment">// cost centers covered</span>
+  <span class="key">medicalDirectors</span>: [ <span class="comment">/* see below */</span> ]
+}</pre>
+      </div>
+
+      <div class="schema-box">
+        <h3>3 · Medical Director record</h3>
+        <pre>{
+  <span class="key">name</span>:    <span class="str">"Chienying Liu"</span>,
+  <span class="key">dyads</span>:   [<span class="str">"Marino, Mark"</span>, <span class="str">"Laffey, Joanna M."</span>],
+  <span class="comment">// Optional pre-loaded rubric inputs for auto-scoring:</span>
+  <span class="key">metrics</span>: {
+    <span class="key">visits</span>:       <span class="num">3</span>,   <span class="comment">// 1–4 tier per Visit volume rubric</span>
+    <span class="key">clinicians</span>:   <span class="num">2</span>,
+    <span class="key">subspecialty</span>: <span class="num">2</span>,
+    <span class="key">acuity</span>:       <span class="num">2</span>,
+    <span class="key">sites</span>:        <span class="num">2</span>,
+    <span class="key">setting</span>:      <span class="num">2</span>,
+    <span class="key">mix</span>:          <span class="num">1</span>,
+    <span class="key">strategy</span>:     <span class="num">2</span>
+  },
+  <span class="key">costCenters</span>: [
+    {
+      <span class="key">id</span>:       <span class="str">"707069"</span>,
+      <span class="key">name</span>:     <span class="str">"ADT Lipids PARN"</span>,
+      <span class="key">division</span>: <span class="str">"Endocrinology"</span>,
+      <span class="key">adminDir</span>: <span class="str">"Marino, Mark"</span>,
+      <span class="key">manager</span>:  <span class="str">"Zhang, Vicky Zhang X."</span>
+    }
+  ]
+}</pre>
+      </div>
+
+      <h3>4 · Where the data comes from</h3>
+      <ul>
+        <li><strong>AEMD names + CC counts</strong> → from <code>Physician_Leader_Cost_Center_Map_Master_16.xlsx</code></li>
+        <li><strong>MD assignments + dyads</strong> → from the same map plus <code>Med_Director__DATA_TABLE_1.xlsx</code></li>
+        <li><strong>Cost center rows</strong> → ID, name, division, admin director, manager columns from the master map</li>
+        <li><strong>Rubric metrics (optional)</strong> → only populate once a role has been scored; the cascade view will then show a teal score pill next to the MD name</li>
+      </ul>
+
+      <h3>5 · Conversion workflow</h3>
+      <p>Easiest path: open the Excel file, save the relevant sheet as CSV, then convert to JSON with any free converter (or a one-line Python script with pandas). Paste the result into <code>LEADERSHIP_DATA.aemds</code>. The tool will render automatically — no build step.</p>
+
+      <h3>6 · GitHub deployment</h3>
+      <ul>
+        <li>Create a new repo, drop in <code>index.html</code> and <code>README.md</code></li>
+        <li>Settings → Pages → Source: <code>main</code> branch, <code>/root</code></li>
+        <li>Your tool will be live at <code>https://&lt;username&gt;.github.io/&lt;repo&gt;/</code></li>
+        <li>No build pipeline, no Node dependencies — pure static HTML/CSS/JS</li>
+      </ul>
+
+      <h3>7 · Privacy note</h3>
+      <p>Because everything renders client-side and saved rubric scores live in <code>localStorage</code>, no data leaves the user's browser. If you need to share scores across the workgroup, use the <strong>Export CSV</strong> button on the rubric tab.</p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ============================================================
+   LEADERSHIP DATA
+   Replace with real values from the UCSF cost-center map.
+   See the "Data Schema" tab for the full structure.
+   ============================================================ */
+const LEADERSHIP_DATA = {
+  svp:  { name: "— SVP Name —", ccCount: 0 },
+  cmo:  { name: "— CMO Name —", ccCount: 0, aemdCount: 0 },
+  aemds: [
+    // SAMPLE PLACEHOLDER — delete and replace with real data
+    {
+      name: "Sample AEMD",
+      vacant: false,
+      totalCCs: 0,
+      medicalDirectors: [
+        {
+          name: "Sample Medical Director",
+          dyads: ["Sample Admin Director"],
+          metrics: null,
+          costCenters: [
+            { id: "000000", name: "Sample Cost Center", division: "Sample Division", adminDir: "Sample Admin", manager: "Sample Manager" }
+          ]
+        }
+      ]
+    },
+    {
+      name: "Vacant AEMD Slot",
+      vacant: true,
+      totalCCs: 0,
+      medicalDirectors: []
+    }
+  ]
+};
+
+/* ============================================================
+   RUBRIC CONFIG
+   Edit weights, thresholds, or cFTE bands here.
+   ============================================================ */
+const RUBRIC_CONFIG = {
+  // Cumulative weighted score → recommended tier & cFTE
+  tierThresholds: [
+    { min: 0,  max: 12, label: "Tier 4 · Focused MD", cfte: "0.10 – 0.20", className: "tier-low"  },
+    { min: 13, max: 18, label: "Tier 3 · Medical Director", cfte: "0.20 – 0.40", className: "tier-mid"  },
+    { min: 19, max: 24, label: "Tier 2 · AEMD",          cfte: "0.40 – 0.60", className: "tier-mid"  },
+    { min: 25, max: 99, label: "Tier 1 · Exec/CMO scope", cfte: "0.60 – 1.00", className: "tier-high" }
+  ]
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let currentEMD = null;
+const STORAGE_KEY = "ucsf_rubric_scores_v1";
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function esc(s){const d=document.createElement("div");d.textContent=s==null?"":String(s);return d.innerHTML;}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+document.getElementById("tabs").addEventListener("click",e=>{
+  const t=e.target.closest(".tab"); if(!t) return;
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  document.getElementById("view-"+t.dataset.view).classList.add("active");
+});
+
+/* ============================================================
+   CASCADE — render EVP/CMO header
+   ============================================================ */
+function renderCascadeHeader(){
+  document.getElementById("evpName").textContent = LEADERSHIP_DATA.svp.name;
+  document.getElementById("evpSub").textContent  = LEADERSHIP_DATA.svp.ccCount + " Active Cost Centers";
+  document.getElementById("cmoName").textContent = LEADERSHIP_DATA.cmo.name;
+  document.getElementById("cmoSub").textContent  = LEADERSHIP_DATA.cmo.ccCount + " Cost Centers · " + LEADERSHIP_DATA.cmo.aemdCount + " AEMDs";
+}
+
+/* ============================================================
+   CASCADE — render AEMD grid
+   ============================================================ */
+function renderEMDs(){
+  const grid=document.getElementById("emdGrid"); grid.innerHTML="";
+  LEADERSHIP_DATA.aemds.forEach((emd,idx)=>{
+    const chip=document.createElement("div");
+    const isActive = currentEMD===idx;
+    const isVacant = emd.vacant;
+    const mdCount  = (emd.medicalDirectors||[]).length;
+    chip.className="emd-chip"+(isActive?" active":"")+(isVacant?" vacant":"");
+    chip.innerHTML =
+      (!isVacant && mdCount>0 ? `<span class="badge">${mdCount}</span>` : "")
+      + `<div class="lb">${isVacant?"AEMD · Vacant":"AEMD"}</div>`
+      + `<div class="nm">${esc(emd.name)}</div>`
+      + `<div class="sb">${emd.totalCCs||0} CCs</div>`
+      + (mdCount>0 ? `<div class="tg">${isActive?"▾ collapse":"▸ expand"}</div>` : "");
+    if(mdCount>0){
+      chip.addEventListener("click",()=>{
+        currentEMD = (currentEMD===idx)?null:idx;
+        renderEMDs(); renderMDPanel();
+      });
+    }
+    grid.appendChild(chip);
+  });
+}
+
+/* ============================================================
+   CASCADE — render MD panel for active AEMD
+   ============================================================ */
+function renderMDPanel(){
+  const panel=document.getElementById("mdPanel");
+  if(currentEMD===null){ panel.classList.remove("open"); return; }
+  const emd=LEADERSHIP_DATA.aemds[currentEMD];
+  panel.innerHTML="";
+
+  const hdr=document.createElement("div"); hdr.className="md-hdr";
+  hdr.innerHTML =
+    `<div>
+       <div class="lb">Exec Medical Director</div>
+       <div class="nm">${esc(emd.name)}</div>
+       <div class="sb">${LEADERSHIP_DATA.cmo.name} · ${emd.medicalDirectors.length} Medical Directors · ${emd.totalCCs||0} Cost Centers</div>
+     </div>
+     <button class="close-btn" onclick="currentEMD=null;renderEMDs();renderMDPanel()">Close ✕</button>`;
+  panel.appendChild(hdr);
+
+  const list=document.createElement("div"); list.className="md-list";
+  emd.medicalDirectors.forEach((md,i)=>{
+    const card=document.createElement("div"); card.className="md-card";
+    const dyadStr  = md.dyads && md.dyads.length ? md.dyads.join(", ") : "None assigned";
+    const divSet={}; (md.costCenters||[]).forEach(cc=>divSet[cc.division]=1);
+    const divList=Object.keys(divSet);
+    const divLabel = (divList[0]||"")+(divList.length>1?` +${divList.length-1}`:"");
+    const ccCount=(md.costCenters||[]).length;
+
+    let scorePill="";
+    if(md.metrics){
+      const s = computeScoreFromMetrics(md.metrics);
+      scorePill = `<span class="pill pill-score">${s.total} · ${s.tier}</span>`;
+    }
+
+    const head=document.createElement("div"); head.className="md-row";
+    head.innerHTML =
+      `<div>
+         <div class="md-name">${esc(md.name)}</div>
+         <div class="md-role">Medical Director</div>
+         <div class="dyad-line"><span class="dot"></span><span class="dyad-name">${esc(dyadStr)}</span></div>
+       </div>
+       <div class="md-meta">
+         ${scorePill}
+         <span class="pill">${esc(divLabel||"—")}</span>
+         <span class="pill pill-c">${ccCount} CC${ccCount===1?"":"s"}</span>
+         <span class="arrow" id="ar${i}">▸</span>
+       </div>`;
+    head.addEventListener("click",()=>{
+      const w=document.getElementById("cw"+i);
+      const open=w.classList.contains("open");
+      w.classList.toggle("open");
+      document.getElementById("ar"+i).textContent = open?"▸":"▾";
+    });
+    card.appendChild(head);
+
+    const wrap=document.createElement("div"); wrap.className="cc-wrap"; wrap.id="cw"+i;
+    if(ccCount>0){
+      let tbl=`<table class="cc-table"><tr><th>CC ID</th><th>Cost Center Name</th><th>Division</th><th>Admin Director</th><th>Manager</th></tr>`;
+      md.costCenters.forEach(cc=>{
+        tbl+=`<tr><td>${esc(cc.id)}</td><td>${esc(cc.name)}</td><td>${esc(cc.division)}</td><td class="dy-col">${esc(cc.adminDir)}</td><td>${esc(cc.manager)}</td></tr>`;
+      });
+      tbl+="</table>";
+      wrap.innerHTML=tbl;
+    } else {
+      wrap.innerHTML=`<div style="padding:14px;color:var(--light);font-style:italic;font-size:11px">No cost centers assigned</div>`;
+    }
+    card.appendChild(wrap);
+
+    // Score-from-rubric button
+    const actions=document.createElement("div");
+    actions.style="padding:8px 14px 12px;text-align:right";
+    actions.innerHTML=`<button class="score-from-rubric-btn" data-role="${esc(md.name)} (under ${esc(emd.name)})">Score this role →</button>`;
+    actions.querySelector("button").addEventListener("click",e=>{
+      const roleStr=e.target.dataset.role;
+      document.querySelector('.tab[data-view="rubric"]').click();
+      document.getElementById("roleName").value=roleStr;
+    });
+    card.appendChild(actions);
+
+    list.appendChild(card);
+  });
+  panel.appendChild(list);
+  panel.classList.add("open");
+  setTimeout(()=>panel.scrollIntoView({behavior:"smooth",block:"start"}),100);
+}
+
+/* ============================================================
+   RUBRIC — scoring
+   ============================================================ */
+function computeScoreFromMetrics(metricsObj){
+  let total=0;
+  document.querySelectorAll(".metric-select").forEach(sel=>{
+    const m=sel.dataset.metric;
+    const w=parseFloat(sel.dataset.weight)||1;
+    const v=parseInt(metricsObj[m],10);
+    if(!isNaN(v)) total += v*w;
+  });
+  total = Math.round(total*10)/10;
+  let tier="—", cfte="—", cls="";
+  RUBRIC_CONFIG.tierThresholds.forEach(t=>{
+    if(total>=t.min && total<=t.max){ tier=t.label; cfte=t.cfte; cls=t.className; }
+  });
+  return { total, tier, cfte, cls };
+}
+
+function recalc(){
+  let total=0;
+  const breakdownRows=[];
+  document.querySelectorAll(".metric-select").forEach(sel=>{
+    const m=sel.dataset.metric;
+    const w=parseFloat(sel.dataset.weight)||1;
+    const v=parseInt(sel.value,10);
+    const scoreCell=document.querySelector(`[data-score="${m}"]`);
+    if(isNaN(v)){
+      scoreCell.textContent="—"; scoreCell.classList.add("empty");
+      breakdownRows.push({label: sel.parentElement.previousElementSibling.querySelector(".metric-label").textContent, val:0, weighted:0, w});
+    } else {
+      const weighted = v*w;
+      total += weighted;
+      scoreCell.textContent = v;
+      scoreCell.classList.remove("empty");
+      breakdownRows.push({label: sel.parentElement.previousElementSibling.querySelector(".metric-label").textContent, val:v, weighted, w});
+    }
+  });
+  total = Math.round(total*10)/10;
+  document.getElementById("totalScore").textContent = total||"—";
+
+  // Tier
+  let tier=null;
+  RUBRIC_CONFIG.tierThresholds.forEach(t=>{
+    if(total>=t.min && total<=t.max) tier=t;
+  });
+  const tierLabelEl=document.getElementById("tierLabel");
+  const tierBadgeEl=document.getElementById("tierBadge");
+  const cfteEl=document.getElementById("cfteValue");
+  const cfteRangeEl=document.getElementById("cfteRange");
+  if(total>0 && tier){
+    tierLabelEl.textContent=tier.label.split(" · ")[0];
+    tierBadgeEl.textContent=tier.label.split(" · ")[1]||tier.label;
+    tierBadgeEl.style.display="inline-block";
+    tierBadgeEl.className="tier-badge "+tier.className;
+    cfteEl.textContent=tier.cfte.split(" – ")[0]+"–"+tier.cfte.split(" – ")[1];
+    cfteEl.style.fontSize="22px";
+    cfteRangeEl.textContent="suggested range";
+  } else {
+    tierLabelEl.textContent="—";
+    tierBadgeEl.style.display="none";
+    cfteEl.textContent="—";
+    cfteRangeEl.textContent="range guidance";
+  }
+
+  // Breakdown bars
+  const max = 4 * 1.5; // max weighted per metric (highest weight is 1.5)
+  const barList=document.getElementById("barList");
+  barList.innerHTML = breakdownRows.map(r=>{
+    const pct = r.val>0 ? (r.weighted/max)*100 : 0;
+    return `<div class="bar-row">
+      <div class="bar-label">${esc(r.label)}${r.w>1?` <span style="color:var(--teal);font-size:10px">×${r.w}</span>`:""}</div>
+      <div class="bar-track"><div class="bar-fill ${r.val>0?"":"empty"}" style="width:${pct}%"></div></div>
+      <div class="bar-val">${r.val||"—"}</div>
+    </div>`;
+  }).join("");
+}
+
+document.querySelectorAll(".metric-select").forEach(sel=>{
+  sel.addEventListener("change",recalc);
+});
+
+document.getElementById("resetBtn").addEventListener("click",()=>{
+  document.getElementById("roleName").value="";
+  document.querySelectorAll(".metric-select").forEach(s=>s.value="");
+  recalc();
+});
+
+/* ============================================================
+   SAVED SCORES (localStorage)
+   ============================================================ */
+function loadSaved(){
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]"); } catch(e){ return []; }
+}
+function persistSaved(arr){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+}
+function renderSaved(){
+  const arr=loadSaved();
+  const list=document.getElementById("savedList");
+  if(arr.length===0){
+    list.innerHTML=`<div class="empty-state">No saved scores yet. Score a role above and click <strong>Save Score</strong>.</div>`;
+    return;
+  }
+  let html=`<table class="saved-table"><tr><th>Role</th><th>Score</th><th>Tier</th><th>cFTE</th><th>Saved</th><th></th></tr>`;
+  arr.forEach((s,i)=>{
+    html+=`<tr>
+      <td><strong>${esc(s.role)}</strong></td>
+      <td>${s.total}</td>
+      <td>${esc(s.tier)}</td>
+      <td>${esc(s.cfte)}</td>
+      <td style="color:var(--light);font-size:11px">${esc(s.date)}</td>
+      <td class="actions-cell">
+        <button class="icon-btn" data-idx="${i}" data-act="load" title="Load">↥</button>
+        <button class="icon-btn del" data-idx="${i}" data-act="del" title="Delete">✕</button>
+      </td>
+    </tr>`;
+  });
+  html+="</table>";
+  list.innerHTML=html;
+  list.querySelectorAll(".icon-btn").forEach(b=>{
+    b.addEventListener("click",e=>{
+      const idx=parseInt(e.target.dataset.idx,10);
+      const act=e.target.dataset.act;
+      const arr=loadSaved();
+      if(act==="del"){ arr.splice(idx,1); persistSaved(arr); renderSaved(); }
+      if(act==="load"){
+        const s=arr[idx];
+        document.getElementById("roleName").value=s.role;
+        Object.keys(s.metrics).forEach(k=>{
+          const sel=document.querySelector(`.metric-select[data-metric="${k}"]`);
+          if(sel) sel.value=s.metrics[k];
+        });
+        recalc();
+        window.scrollTo({top:0,behavior:"smooth"});
+      }
+    });
+  });
+}
+
+document.getElementById("saveBtn").addEventListener("click",()=>{
+  const role=document.getElementById("roleName").value.trim();
+  if(!role){ alert("Please enter a role name before saving."); return; }
+  const metrics={};
+  let any=false;
+  document.querySelectorAll(".metric-select").forEach(sel=>{
+    metrics[sel.dataset.metric]=sel.value;
+    if(sel.value) any=true;
+  });
+  if(!any){ alert("Please select at least one metric before saving."); return; }
+  const total=parseFloat(document.getElementById("totalScore").textContent)||0;
+  const tier=document.getElementById("tierBadge").textContent||"—";
+  const cfte=document.getElementById("cfteValue").textContent||"—";
+  const arr=loadSaved();
+  arr.unshift({ role, metrics, total, tier, cfte, date: new Date().toLocaleString() });
+  persistSaved(arr); renderSaved();
+});
+
+document.getElementById("exportBtn").addEventListener("click",()=>{
+  const arr=loadSaved();
+  if(arr.length===0){ alert("No saved scores to export."); return; }
+  const headers=["Role","Visits","Clinicians","Subspecialty","Acuity","Sites","Setting","Mix","Strategy","Total","Tier","cFTE","Saved"];
+  const rows=arr.map(s=>[
+    s.role, s.metrics.visits, s.metrics.clinicians, s.metrics.subspecialty,
+    s.metrics.acuity, s.metrics.sites, s.metrics.setting, s.metrics.mix, s.metrics.strategy,
+    s.total, s.tier, s.cfte, s.date
+  ].map(v=>`"${String(v||"").replace(/"/g,'""')}"`).join(","));
+  const csv=[headers.join(","),...rows].join("\n");
+  const blob=new Blob([csv],{type:"text/csv"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url;
+  a.download=`ucsf_role_scores_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
+renderCascadeHeader();
+renderEMDs();
+recalc();
+renderSaved();
+</script>
+</body>
+</html>
